@@ -1,0 +1,36 @@
+n-grams
+    reminder: tokenization with regex
+    simplistic unigrams: spell checker -> list lookup, binary search, sets
+        algorithms matter
+    unigrams: bag of words for ad placement/search
+        why are ad placements bad?
+    unigrams: spell checker with suggestions -> Levenshtein distance
+    better spell checker -> bigrams/trigrams for words, n-grams for nonce words
+    bigrams: word prediction
+        transition probabilities
+        smoothing techniques
+    POS tagging
+    limitations:
+        agreement, long-distance dependencies, structure/scope/semantics
+        "the keys on the cabinet ARE" (what is the psycholinguistics here?)
+        "People who look like this water their plants"
+        "The old man the boat"
+        "The horse raced past the barn fell"
+
+binary
+    memory usage
+    conversion
+    text encoding
+
+finite-state machines -> OOP
+    stemming/lemmatization/POS tagging
+    morphological generation and analysis
+    Viterbi algorithm
+    syntax?
+
+recursive transition networks -> CFGs
+
+PCFGs
+    CKY -> dynamic programming again
+
+model evaluation
