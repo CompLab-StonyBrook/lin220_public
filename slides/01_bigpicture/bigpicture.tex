@@ -1,0 +1,585 @@
+\documentclass[xcolor={usenames,svgnames,x11names,dvipsnames,table}]{beamer}
+
+\usetheme{SBUclass}
+
+\usepackage{mypackages}
+
+\title{Big Picture}
+\author{Thomas Graf}
+\institute{\texttt{lin220@thomasgraf.net}}
+\date{LIN 220\\ Lecture 1}
+
+
+\begin{document}
+\unnumbered{
+\begin{frame}
+	\titlepage
+\end{frame}
+}
+
+\begin{frame}{Two lessons}
+    \begin{columns}
+        \column{.45\linewidth}
+        \centering
+        \visible<2->{
+        \begin{alertblock}{Lesson 1}
+            Pogo sticks don't fly.
+        \end{alertblock}
+        \includegraphics[height=10em]{./img/pogostick}
+        }
+        \column{.45\linewidth}
+        \visible<3->{
+        \begin{alertblock}{Lesson 2}
+            Wasps are strangely stupid.
+        \end{alertblock}
+        \includegraphics[height=10em]{./img/wasp}
+        }
+    \end{columns}
+\end{frame}
+
+\begin{frame}{An alternate history of flight}
+    \begin{itemize}
+        \item It is the 19th century, and airplanes aren't a thing yet.
+        \item Three competitors at the first national flight competition:
+    \end{itemize}
+
+    \begin{tabular}{ccc}
+        \begin{tikzpicture}
+            \node (img) at (0,0) [visible on=<1->,
+                                  label={[font=\bfseries]below:Icarus Inc}]
+                {\includegraphics[width=8em]{./img/ikarus}};
+            \draw[very thick, Red3, visible on=<2->] (img.south west) to (img.north east);
+            \draw[very thick, Red3, visible on=<2->] (img.south east) to (img.north west);
+        \end{tikzpicture}
+        &
+        \begin{tikzpicture}
+            \node (img) at (0,0) [visible on=<3->,
+                                  label={[visible on=<3->, font=\bfseries]below:Leonardo LLC}]
+                {\includegraphics[width=8em]{./img/leonardo}};
+            \draw[very thick, Red3, visible on=<4->] (img.south west) to (img.north east);
+            \draw[very thick, Red3, visible on=<4->] (img.south east) to (img.north west);
+        \end{tikzpicture}
+        &
+        \begin{tikzpicture}
+            \node (img) at (0,0) [visible on=<5->,
+                                  label={[visible on=<5->, font=\bfseries]below:Timmy}]
+                {\includegraphics[width=3.5em]{./img/pogokid}};
+        \end{tikzpicture}
+    \end{tabular}
+\end{frame}
+
+\begin{frame}{An alternate history of flight [cont.]}
+    \begin{columns}
+        \column{.6\linewidth}
+        \begin{itemize}
+            \item After Timmy's victory,\\
+                  \highlight{pogo sticks are all the rage}.
+            \item Better and better pogo sticks\\
+                  hit the market.
+            \item By 1930, the US is the world's leading pogo stick nation.
+        \end{itemize}
+        \column{.5\linewidth}
+        \includegraphics[width=10em]{./img/rising}
+
+        \medskip
+        \includegraphics[width=10em]{./img/fuckyeah}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{An alternate history of flight [cont.]}
+    \begin{itemize}
+        \item By 1952, the US is occupied by Japan and Nazi Germany. 
+        \item Its pogo sticks were \highlight{no match for airplanes}.
+        \item Nobody knows what happened to Timmy.
+    \end{itemize}
+
+    \begin{center}
+    \includegraphics[width=24em]{./img/occupied_us}
+    \end{center}
+\end{frame}
+
+\begin{frame}{Language technology = pogo sticks}
+    \begin{itemize}
+        \item Like flight, language technology is the future.
+        \item Like pogo sticks, \highlight{hyped solutions} are not the final answer:
+            \begin{itemize}
+                \item Deep Learning
+                \item Big Data
+                \item embeddings
+                \item RNNs, LSTMs
+                \item seq2seq
+            \end{itemize}
+        \item Let's talk about them\ldots
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{The current hype: Deep Learning}
+    \begin{itemize}
+        \item One learning model is all over the media right now:\\
+            \highlight{Deep Learning}
+        \item Deep learning = very large and complex neural networks
+        \item Neural networks imitate the human brain.
+    \end{itemize}
+
+    \pause
+    \begin{block}{Standard model of the human brain}
+        \begin{itemize}
+            \item connected network of neurons
+            \item input activates neurons, which start ``firing''\\
+                (= emitting electrical current)
+            \item current activates other neurons $\Rightarrow$ activation patterns
+            \item learning = strengthening connection between specific neurons
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}{The perceptron}
+    \begin{itemize}
+        \item \textbf{input layer:} neurons that are sensitive to input
+        \item \textbf{output layer:} neurons that represent output values
+        \item \textbf{connections:} weighted links between input and output layer
+        \item most activated output neuron represents decision
+    \end{itemize}
+    %
+    \begin{center}
+        \only<1>{
+        \begin{tikzpicture}
+            \node[minimum size=3em,draw,circle] (dear) at (0,0) {Dear};
+            \node[minimum size=3em,draw,circle] (hi) [left=of dear] {Hi};
+            \node[minimum size=3em,draw,circle] (emily) [right=of dear] {Emily};
+            \node[minimum size=3em,draw,circle] (ham) [below=5em of hi] {ham};
+            \node[minimum size=3em,draw,circle] (spam) [below=5em of emily] {spam};
+
+            \foreach \Input/\Output/\Value in {%
+                    dear/ham/0,
+                    dear/spam/5,
+                    hi/ham/3,
+                    hi/spam/1,
+                    emily/ham/10,
+                    emily/spam/0}
+                \draw[->] (\Input) to node [right, pos=.75] {\Value} (\Output);
+        \end{tikzpicture}
+        }%
+        \only<2>{
+        \begin{tikzpicture}
+            \node[minimum size=3em,draw,circle,fill=blue!25] (dear) at (0,0) {Dear};
+            \node[minimum size=3em,draw,circle,fill=blue!25] (hi) [left=of dear] {Hi};
+            \node[minimum size=3em,draw,circle] (emily) [right=of dear] {Emily};
+            \node[minimum size=3em,draw,circle,fill=red!10] (ham) [below=5em of hi] {ham};
+            \node[minimum size=3em,draw,circle,fill=red!35] (spam) [below=5em of emily] {spam};
+
+            \foreach \Input/\Output/\Value in {%
+                    dear/ham/0,
+                    dear/spam/5,
+                    hi/ham/3,
+                    hi/spam/1,
+                    emily/ham/10,
+                    emily/spam/0}
+                \draw[->] (\Input) to node [right, pos=.75] {\Value} (\Output);
+        \end{tikzpicture}
+        }%
+        \only<3>{
+        \begin{tikzpicture}
+            \node[minimum size=3em,draw,circle,fill=blue!25] (dear) at (0,0) {Dear};
+            \node[minimum size=3em,draw,circle,fill=blue!25] (hi) [left=of dear] {Hi};
+            \node[minimum size=3em,draw,circle,fill=blue!25] (emily) [right=of dear] {Emily};
+            \node[minimum size=3em,draw,circle,fill=red!75] (ham) [below=5em of hi] {ham};
+            \node[minimum size=3em,draw,circle,fill=red!35] (spam) [below=5em of emily] {spam};
+
+            \foreach \Input/\Output/\Value in {%
+                    dear/ham/0,
+                    dear/spam/5,
+                    hi/ham/3,
+                    hi/spam/1,
+                    emily/ham/10,
+                    emily/spam/0}
+                \draw[->] (\Input) to node [right, pos=.75] {\Value} (\Output);
+        \end{tikzpicture}
+        }
+    \end{center}
+\end{frame}
+
+\begin{frame}{For the friendly neighborhood mathematician}
+    \begin{itemize}
+        \item Perceptrons are linear functions (matrix multiplication).
+    \end{itemize}
+
+    \begin{example}[Computing \emph{Hi Dear}]
+        $$
+        \begin{pmatrix}
+            1 & 1 & 0\\
+        \end{pmatrix}
+        \otimes
+        \begin{pmatrix}
+            3 & 1\\
+            0 & 5\\
+            10 & 0\\
+        \end{pmatrix}
+        =
+        \begin{pmatrix}
+            3 & 6
+        \end{pmatrix}
+        $$
+    \end{example}
+
+    \begin{itemize}
+        \item Since matrix multiplication is associative,\\
+              every \highlight{multi-layer perceptron can be reduced to one layer}.
+    \end{itemize}
+
+    \visible<2->{%
+    \begin{example}[Adding more weight to spam score]
+        $$
+        \begin{pmatrix}
+            3 & 6\\
+        \end{pmatrix}
+        \otimes
+        \begin{pmatrix}
+            3 & 0\\
+            0 & 1\\
+        \end{pmatrix}
+        =
+        \begin{pmatrix}
+            9 & 6\\
+        \end{pmatrix}
+        =
+        \begin{pmatrix}
+            1 & 1 & 0\\
+        \end{pmatrix}
+        \times
+        \begin{pmatrix}
+            9 & 1\\
+            0 &  5\\
+            30 & 0\\
+        \end{pmatrix}
+        $$
+    \end{example}
+    }
+\end{frame}
+
+\begin{frame}{Neural networks: The big picture}
+    \begin{itemize}
+        \item Modern neural networks are just the perceptron on steroids.
+        \item There's a lot of jargon:
+            \begin{itemize}
+                \item RNNs
+                \item LSTMs
+                \item embeddings
+                \item encoder/decoder
+                \item seq2seq
+            \end{itemize}
+        \item Mathematically, modern neural networks intersperse linear functions (= perceptron layers) with non-linear functions.
+        \item And \highlight{that's it}.\\
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Neural networks aren't a magic bullet}
+    Neural networks are not perfect:
+    \begin{itemize}
+        \item \textbf{Data hungry}\\
+              If you don't have tons of data, don't even try.
+        \item \textbf{Resource hungry}\\
+              Large networks take forever to train.
+        \item \textbf{Black boxes}\\
+              Nobody knows what they do.
+              It's \highlight{trial and error}.
+        \item \textbf{Do not scale}\\
+              If your objectives change, you're back to square~1.
+        \item \textbf{No safeties}\\
+              If something goes wrong, it often goes really wrong.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Neural networks in one picture}
+    \centering
+    \includegraphics[width=18em]{./img/xkcd}
+\end{frame}
+
+\begin{frame}{A common reply}
+    \begin{quotation}
+        We're not aiming for perfection,\\
+        it just has to be good enough.
+    \end{quotation}
+    \hspace{14em} Every engineer ever
+
+    \bigskip
+    \textbf{My reply}
+    \begin{enumerate}
+        \item It's still a bad choice for engineering:
+            \begin{itemize}
+                \item expensive (resources, time, labor)
+                \item scales badly
+                \item not modular
+            \end{itemize}
+        \item Your notions of ``good enough'' are too limited:
+            \begin{itemize}
+                \item precision
+                \item recall
+                \item F-score
+            \end{itemize}
+              They all ignore \highlight{error quality}.
+    \end{enumerate}
+\end{frame}
+
+\begin{frame}{Let's go to wasp school}
+    \begin{columns}
+        \column{.45\linewidth}
+        \begin{alertblock}{Lesson 2}
+            Wasps are strangely stupid.
+        \end{alertblock}
+        \column{.45\linewidth}
+        \includegraphics[height=10em]{./img/wasp}
+    \end{columns}
+    \begin{center}
+        \visible<2>{
+            \LARGE\bfseries \color{SteelBlue4}Volunteer needed!
+        }
+    \end{center}
+\end{frame}
+
+\begin{frame}{What we learned from wasp school}
+    \begin{itemize}
+        \item Users endow systems with human-like qualities.
+        \item When human biases are violated, the illusion breaks down.
+        \item Breaking the illusion is jarring.
+    \end{itemize}
+
+    \begin{block}{The true task of language technology}
+        \begin{itemize}
+            \item Trick humans into considering you human-like.
+            \item Minimize errors that violate human biases.
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}{Biases in human cognition: a quick experiment}
+    \begin{center}
+        \small
+        \begin{tabular}{cccccccc}
+            \begin{tikzpicture}
+                \fill[blue] (0,0) circle (1em);
+            \end{tikzpicture}
+            &
+            \begin{tikzpicture}
+                \fill[purple] (0,0) circle (1em);
+            \end{tikzpicture}
+            &
+            \begin{tikzpicture}
+                \fill[blue] (0,0) rectangle (2em,2em);
+            \end{tikzpicture}
+            &
+            \begin{tikzpicture}
+                \fill[purple] (0,0) rectangle (2em,2em);
+            \end{tikzpicture}
+            &
+            \begin{tikzpicture}
+                \fill[brown] (0,0) circle (1em);
+            \end{tikzpicture}
+            &
+            \begin{tikzpicture}
+                \fill[brown] (0,0) rectangle (2em,2em);
+            \end{tikzpicture}
+            &
+            \begin{tikzpicture}
+                \fill[brown] (0em,0em) -- (2em,0em) -- (1em,2em) -- cycle;
+            \end{tikzpicture}
+            \\[6pt]
+            \emph{blip}
+            &
+            not \emph{blip}
+            &
+            \emph{blip}
+            &
+            not \emph{blip}
+            &
+            \visible<2->{%
+            \emph{blip}
+            }
+            &
+            \visible<3->{%
+            \emph{blip}
+            }
+            &
+            \visible<4->{%
+            \emph{blip}
+            }
+            \\[6pt]
+            not \emph{gnok}
+            &
+            not \emph{gnok}
+            &
+            \emph{gnok}
+            &
+            \emph{gnok}
+            &
+            \visible<6->{%
+            \emph{gnok}
+            }
+            &
+            \visible<7->{%
+            \emph{gnok}
+            }
+            &
+            \visible<8->{%
+            \emph{gnok}
+            }
+            \\[6pt]
+            not \emph{bnik}
+            &
+            not \emph{bnik}
+            &
+            \emph{bnik}
+            &
+            not \emph{bnik}
+            &
+            \visible<10->{%
+            \emph{bnik}
+            }
+            &
+            \visible<11->{%
+            \emph{bnik}
+            }
+            &
+            \visible<12->{%
+            \emph{bnik}
+            }
+            \\[6pt]
+            \emph{glop}
+            &
+            \emph{glop}
+            &
+            not \emph{glop}
+            &
+            \emph{glop}
+            &
+            \visible<14->{%
+            \emph{glop}
+            }
+            &
+            \visible<15->{%
+            \emph{glop}
+            }
+            &
+            \visible<16->{%
+            \emph{glop}
+            }
+            \\[6pt]
+            \emph{blok}
+            &
+            \emph{blok}
+            &
+            \emph{blok}
+            &
+            \emph{blok}
+            &
+            \visible<18->{%
+            not \emph{blok}
+            }
+            &
+            \visible<19->{%
+            not \emph{blok}
+            }
+            &
+            \visible<20->{%
+            not \emph{blok}
+            }
+        \end{tabular}
+    \end{center}
+
+    \begin{description}
+        \item[blip] {\visible<5->{not red}}
+        \item[gnok] {\visible<9->{brown or rectangular}}
+        \item[bnik] {\visible<13->{blip and gnok}}
+        \item[glop] {\visible<17->{if bnik and not brown, then not rectangular}}
+        \item[blok] {\visible<21->{bnik or glop, but not both}}
+    \end{description}
+\end{frame}
+
+\begin{frame}{Human language bias and unreasonable expectations}
+    Human bias is a much bigger issue for language than for, say, cars.
+    %
+    \begin{center}
+        \begin{tabular}{cccc}
+            \includegraphics[height=8em]{./img/data} &
+            \includegraphics[height=8em]{./img/c3po} &
+            \includegraphics[height=8em]{./img/hal9000} &
+            \includegraphics[height=8em]{./img/terminator} \\
+            \includegraphics[height=8em]{./img/robby} &
+            \includegraphics[height=8em]{./img/tachikoma} &
+            \includegraphics[height=8em]{./img/brainiac} &
+            \includegraphics[height=8em]{./img/shodan}
+        \end{tabular}
+    \end{center}
+\end{frame}
+
+\begin{frame}{Robots' Narrow Range of Language Competence}
+    \begin{tikzpicture}
+        \begin{scope}[visible on=<2->]
+            \node (perfect) at (0,0) {%
+                {
+                    \includegraphics[width=5em]{img/wheatley}}%
+                };
+            \node (perfect-text) [right=2em of perfect] {completely human};
+        \end{scope}
+
+        \begin{scope}[visible on=<3->]
+            \node (good) [below=1em of perfect] {%
+                {
+                    \includegraphics[width=5em]{img/robby_cropped}}%
+                };
+            \node (good-text) [right=2em of good] {perfect but weird voice};
+        \end{scope}
+
+        \begin{scope}[visible on=<4->]
+            \node (arnold) [below=1em of good] {%
+                {
+                    \includegraphics[width=5em]{img/terminator}}%
+                };
+            \node (arnold-text) [right=2em of arnold] {Arnold};
+        \end{scope}
+
+        \draw[->,red,very thick] (perfect.north west) -- (arnold.south west);
+    \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Fake it till you make it!}
+    \begin{itemize}
+        \item Language technology is still largely smokes and mirrors.
+        \item User-facing software has to fool the user.
+        \item Current methods can't do that, they will trip up in weird ways.
+    \end{itemize}
+
+    \begin{block}{Be wrong, not weird}
+        \begin{itemize}
+            \item 90\% performance can be better than 99\%.
+            \item It depends on how unnatural the errors are.
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}{Wrapping up}
+    \begin{itemize}
+        \item Don't get me wrong, NLP has achieved amazing things.
+        \item Neural networks have revolutionized the field.
+        \item But NNs are no magic fix.
+        \item For long-term success,\\
+              \highlight{language technology needs language science}.  \end{itemize}
+
+    \begin{columns}
+        \column{.45\linewidth}
+        \centering
+        \visible<2->{
+        \begin{alertblock}{Lesson 1}
+            Pogo sticks don't fly.
+        \end{alertblock}
+        }
+        \column{.45\linewidth}
+        \visible<3->{
+        \begin{alertblock}{Lesson 2}
+            Wasps are strangely stupid.
+        \end{alertblock}
+        }
+    \end{columns}
+\end{frame}
+
+\end{document}
