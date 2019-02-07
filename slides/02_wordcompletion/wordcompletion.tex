@@ -1,0 +1,493 @@
+\documentclass[professionalfonts, xcolor={usenames,svgnames,x11names,table}]{beamer}
+
+\usetheme{SBUclass}
+\usepackage{mypackages}
+\usepackage{mycommands}
+
+
+\title{Word Completion}
+\author{Thomas Graf}
+\institute{Stony Brook University\\\texttt{lin120@thomasgraf.net}}
+\date{LIN 220, Spring 2019\\Lecture 2}
+
+
+\begin{document}
+\unnumbered{
+\begin{frame}
+	\titlepage
+\end{frame}
+}
+
+\begin{frame}{Word completion: a simple problem(?)}
+    \begin{itemize}
+        \item When you write something on your phone,\\
+              it automatically suggests words while you're typing them.
+        \item Seems easy, but it's \highlight{fairly intricate}.
+    \end{itemize}
+
+    \begin{lessons}
+        \begin{itemize}
+            \item transition probabilities with $n$-grams
+            \item ``More than 1, but less than 5.''
+            \item efficient data structures: tries\slash prefix trees
+        \end{itemize}
+    \end{lessons}
+\end{frame}
+
+\begin{frame}[fragile]{Attempt 1: simple lookup}
+    \begin{itemize}
+        \item To make suggestions for completions,\\
+              we only need an English\slash German\slash\ldots dictionary.
+    \end{itemize}
+
+    \begin{pythoncode}
+        # load English dictionary from nltk package
+        from nltk.corpus import words
+        # and see if "test" is in the list
+        "test" in words.words()
+        >>> True
+    \end{pythoncode}
+
+    \begin{itemize}
+        \item Given word \Purple{w}, the set of possible completions for \Purple{w}\\
+              consists of all listed words that start with \Purple{w}:
+    \end{itemize}
+
+    \[
+        \text{completions}(\Purple{w}) =
+            \{ w' \mid w' \text{ starts with } \Purple{w} \}
+    \]
+\end{frame}
+
+\begin{frame}[fragile]{Attempt 1 [cont.]}
+    \begin{itemize}
+        \item completions(\Purple{w}) is easily computed in Python.
+    \end{itemize}
+
+    \begin{pythoncode}
+        def completions(word, wordlist):
+            """Return set of all known completions for word."""
+            return {comp for comp in wordlist
+                    if comp.startswith(word)}
+    \end{pythoncode}
+
+    \begin{pythoncode}
+        completions("testing", words.words())
+        >>> {"testing", "testingly"}
+    \end{pythoncode}
+\end{frame}
+
+\begin{frame}[fragile]{Evaluating attempt 1}
+    \begin{itemize}
+        \item Is this a \highlight{good solution?}
+    \end{itemize}
+
+    \begin{center}
+        \begin{tabular}{c@{\hspace{2em}}c}
+            \toprule
+            \textbf{Pro} & \textbf{Contra}\\
+            \midrule
+            \visible<2->{simple} & \visible<3->{too many completions}\\
+                                 & \visible<4->{unlikely completions}\\
+            \bottomrule
+        \end{tabular}
+    \end{center}
+
+    \onslide<3->
+    \begin{pythoncode}
+        completions("test", words.words())
+        >>> {"test", "testa", "testable", "testacean", ...}
+    \end{pythoncode}
+\end{frame}
+
+\begin{frame}[fragile]{Improving attempt 1}
+    \begin{itemize}
+        \item We can limit the number of suggestions,\\
+              if we use a \textbf{list} instead of a \textbf{set}.
+    \end{itemize}
+    \begin{pythoncode}
+        def completions(word, wordlist):
+            """Return list of all known completions for word."""
+            return [comp for comp in wordlist
+                    if comp.startswith(word)]
+
+        completions("test", words.words())[:3]
+        >>> ["test", "testa", "testable"]
+    \end{pythoncode}
+    \begin{itemize}
+        \item But this still includes unlikely completions like \emph{testa}.
+        \item We need \highlight{probabilities}!
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Probability = Frequency (?)}
+    \begin{itemize}
+        \item We only want to show the \highlight{most likely completions}.
+        \item But what is most likely?
+        \item \textbf{Naive proposal:} the most frequent word!
+    \end{itemize}
+
+    \visible<2->{%
+        \begin{center}
+            Um, but how do we figure out what is most common?
+        \end{center}
+    }
+\end{frame}
+
+\begin{frame}{How to find common words}
+    \begin{itemize}
+        \item \textbf{Task:} determine which words are common
+        \item \textbf{Solution:}
+            \begin{enumerate}
+                \item Collect sufficiently large sample of texts
+                \item For each word (\textbf{type}), count how often it occurs in\\
+                    the entire sample (= its number of \textbf{tokens}).
+                \item Calculate the \highlight{frequency} of the word in the sample:
+                    \[
+                        \text{freq}(
+                            \text{\colored{blue!75}{\emph{word}}},
+                            \text{\colored{orange}{\emph{sample}}}
+                            )
+                        =
+                        \frac{%
+                            \text{number of tokens of \colored{blue!75}{\emph{word}}}}
+                            {\text{word length of whole \colored{orange}{\emph{sample}}}}
+                    \]
+            \end{enumerate}
+    \end{itemize}
+
+    \pause
+    \begin{block}{Types vs tokens}
+        We have to distinguish \textbf{\alert<3>{word} types}
+        (\emph{a}, \emph{the}, \emph{Mary}, \emph{red}, \ldots)
+        from their \textbf{\alert<3>{word} tokens}, which are the instances of a specific \alert<3>{word} type.
+        For instance, the type ``\alert<3>{word}'' has \alert<3>{4 tokens} in this box.
+    \end{block}
+\end{frame}
+
+\begin{frame}{Example calculation}
+    \textbf{Sample:} \colored{SteelBlue4}{1000} words long
+    \hfill
+    \textbf{Words:} be, bed, bee, bell
+    %
+    \begin{center}
+        \begin{tabular}{rcccc}
+            \textbf{Type} & be & bed & bee & bell\\
+            \textbf{Tokens} & \color{orange}\bfseries 13 & \color{purple}\bfseries 2 & \color{SeaGreen4}\bfseries 0 & \color{brown}\bfseries 3 
+        \end{tabular}
+    \end{center}
+    %
+    \[
+        \begin{array}{c@{\hspace{2em}}c}
+            \text{freq}(\text{be}) = \frac{\color{orange}\mathbf{13}}{\color{SteelBlue4} 1000} = 1.3\%
+            &
+            \text{freq}(\text{bee}) = \frac{\color{SeaGreen4}\mathbf{0}}{\color{SteelBlue4} 1000} = 0.0\%
+            \\[6pt]
+            \text{freq}(\text{bed}) = \frac{\color{purple}\mathbf{2}}{\color{SteelBlue4} 1000} = 0.2\%
+            &
+            \text{freq}(\text{bell}) = \frac{\color{brown}\mathbf{3}}{\color{SteelBlue4} 1000} = 0.3\%\\
+        \end{array}
+    \]
+
+    \visible<2->{%
+        \begin{center}
+            Ordered completions for \emph{be}: \visible<3->{be}\visible<4->{, bell}\visible<5->{, bed}\visible<6>{, bee}
+        \end{center}
+    }
+\end{frame}
+
+\begin{frame}{Types of corpora}
+    \begin{itemize}
+        \item \textbf{Corpus} = large, structured collections of texts
+        \begin{description}
+            \item[mono-\slash multilingual] just one language, or many?
+            \item[annotated] not just text, but additional annotations\\
+                             (e.g. tags for part of speech, syntax trees)
+        \end{description}
+    \end{itemize}
+
+    \begin{block}{Some common corpora}
+        \begin{description}
+            \item[Brown] 1 million words, tagged, 500 samples across 15 genres (fiction, news paper, \ldots)
+            \item[Gutenberg] 1.8 million words, 18 classic texts of fiction
+            \item[Penn] 40k words, tagged and parsed
+            \item[Reuters] 1.3 million words, news documents
+            \item[Switchboard] 36 phone calls, fully transcribed and parsed
+            \item[Wordlist] 960k words (no repetitions) and 20k affixes for 8 languages
+        \end{description}
+    \end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Getting probabilities from the corpus}
+    \begin{pythoncode}
+        from nltk.corpus import brown
+        from collections import Counter
+
+        # load Brown corpus as sequence of words
+        brown_text = brown.words()
+        # total number of words = length of text
+        total = len(brown_text)
+        # calculate counts
+        brown_counts = Counter(brown_text)
+        # convert counts to frequencies
+        for word in brown_counts:
+            brown_counts[word] = brown_counts[word]/total
+    \end{pythoncode}
+
+    \begin{itemize}
+        \item Alright, we have frequencies for each word.\\
+              Now what?
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Ordering completions by frequency}
+    \begin{itemize}
+        \item For a good user experience, completions should appear in\\
+              \highlight{descending order of probability}.
+    \end{itemize}
+
+    \begin{pythoncode}
+        def completions(word, counts):
+            """Return set of all known completions for word.
+
+            The completions are sorted by frequency,
+            in descending order.
+            """
+            comps = [comp for comp in counts
+                     if comp.startswith(word)]
+            return sorted(comps,
+                          key=lambda x: counts[x],
+                          reverse=True)
+    \end{pythoncode}
+
+    \begin{pythoncode}
+        completions("test", words.words(), brown_counts)
+        >>> ["test", "testimony", "tested", "testing", ...]
+    \end{pythoncode}
+\end{frame}
+
+\begin{frame}{Summary for revised attempt 1}
+    \begin{enumerate}
+        \item \textbf{Needed resources:} corpus
+        \item Compute frequencies for all words in corpus
+        \item Look up possible completions for user input
+        \item Sort completions by their frequency
+    \end{enumerate}
+
+    \begin{center}
+        Great, we're done, right?! Not quite\ldots
+    \end{center}
+\end{frame}
+
+\begin{frame}{Probability $\neq$ word frequency}
+    \begin{itemize}
+        \item The probability of a word isn't fixed,
+              it varies by \highlight{context}.
+    \end{itemize}
+
+    \begin{example}
+        \begin{center}
+            \begin{tabular}{c@{\hspace{2em}}ccc}
+                & \textbf{tested} & \textbf{testing} & \textbf{testimony}\\
+                \textbf{I have} & hi & low & mid\\
+                \textbf{I have been} & hi & hi & low\\
+                \textbf{I have the} & low & low & hi\\
+            \end{tabular}
+        \end{center}
+    \end{example}
+
+    \begin{itemize}
+        \item The frequency of words is not enough,\\
+              we need frequencies of sequences of words $\Rightarrow$ \highlight{n-grams}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Defining n-grams}
+    \begin{description}
+        \item[n-gram] a contiguous sequence of $n$ words
+    \end{description}
+
+    \begin{center}
+        \begin{tabular}{rll}
+            \toprule
+            \textbf{n} & \textbf{Name} & \textbf{Example}\\
+            \midrule
+            1 & unigram & John\\
+            2 & bigram  & John to\\
+            3 & trigram & John to be\\
+            4 & 4-gram & John to be in\\
+            5 & 5-gram & John to be in the\\
+            \bottomrule
+        \end{tabular}
+    \end{center}
+
+    \begin{example}
+        \textbf{String}\\
+        \begin{tikzpicture}
+            \matrix (m) at (0,0) [matrix of nodes, ampersand replacement=\&] {%
+                John \& and \& Marie \& are \& not \& Bill \& and \& Sue\\
+            };
+            \begin{pgfonlayer}{background}
+                % bigrams
+                \foreach \Right [remember=\Right as \previous (initially 1)] in {2,3,4,5,6,7,8}
+                    \draw[draw=purple,fill=purple!25,thick,
+                          visible on=<\Right>]
+                        (m-1-\previous.south west) rectangle (m-1-\Right.north east);
+
+                % trigrams
+                \foreach \Left/\Right/\Timer in {%
+                    1/3/9,
+                    2/4/10,
+                    3/5/11,
+                    4/6/12,
+                    5/7/13,
+                    6/8/14%
+                    }
+                    \draw[draw=blue,fill=blue!25,thick,
+                          visible on=<\Timer>]
+                        (m-1-\Left.south west) rectangle (m-1-\Right.north east);
+
+                % 4-grams
+                \foreach \Left/\Right/\Timer in {%
+                    1/4/15,
+                    2/5/16,
+                    3/6/17,
+                    4/7/18,
+                    5/8/19%
+                    }
+                    \draw[draw=brown,fill=brown!25,thick,
+                          visible on=<\Timer>]
+                        (m-1-\Left.south west) rectangle (m-1-\Right.north east);
+
+                % 5-grams
+                \foreach \Left/\Right/\Timer in {%
+                    1/5/20,
+                    2/6/21,
+                    3/7/22,
+                    4/8/23%
+                    }
+                    \draw[draw=teal,fill=teal!25,thick,
+                          visible on=<\Timer>]
+                        (m-1-\Left.south west) rectangle (m-1-\Right.north east);
+            \end{pgfonlayer}
+        \end{tikzpicture}
+    \end{example}
+\end{frame}
+
+\begin{frame}{Frequencies for n-grams}
+    Frequencies can be computed for n-grams, too.
+
+    \begin{exampleblock}{Example: Calculating Bigram Frequencies}
+        \begin{itemize}
+            \item \textbf{String}\\
+                \begin{tikzpicture}
+                    \matrix (m) at (0,0) [matrix of nodes, ampersand replacement=\&] {%
+                        when \& buffalo \& buffalo \& buffalo \& buffalo \& buffalo \& buffalo\\
+                    };
+                    \begin{pgfonlayer}{background}
+                        \foreach \Right [remember=\Right as \previous (initially 1)] in {2,3,4,5,6,7}
+                            \draw[draw=purple,fill=purple!25,thick,
+                                  visible on=<\Right>]
+                                (m-1-\previous.south west) rectangle (m-1-\Right.north east);
+                    \end{pgfonlayer}
+                \end{tikzpicture}
+            %
+            \item \textbf{Bigram token list}\\
+                \visible<2->{when buffallo,}
+                \visible<3->{buffalo buffalo,}
+                \visible<4->{buffalo buffalo,}
+                \visible<5->{buffalo buffalo,}
+                \visible<6->{buffalo buffalo,}
+                \visible<7->{buffalo buffalo}
+            %
+            \item \textbf{Bigram counts and frequencies}\\
+                \visible<8>{
+                \begin{enumerate}
+                    \item when buffalo: 1 $\Rightarrow \frac{1}{6} = 16.7\%$
+                    \item buffalo buffalo: 5 $\Rightarrow \frac{5}{6} = 83.3\%$
+                \end{enumerate}
+                }
+        \end{itemize}
+    \end{exampleblock}
+\end{frame}
+
+\begin{frame}{Adapting the strategy}
+    \begin{enumerate}
+        \item \textbf{Needed resources:} corpus
+        \item Convert corpus to list of $n$-gram tokens
+        \item Compute frequencies for all $n$-grams
+        \item Look up possible completions for user input
+        \item Look at previous $n-1$ words.
+        \item Sort completions by $n$-gram probability
+    \end{enumerate}
+
+    \begin{example}
+        \begin{itemize}
+            \item \textbf{Trigram frequencies}\\
+                \begin{tabular}{lr@{\hspace{2em}}lr}
+                    bus is late  & 30\% & train is late  & 15\%\\
+                    bus is lovely & 25\% & train is lovely & 8\%\\
+                    bus is lazy & 10\% & train is lazy & 2\%\\
+                \end{tabular}
+        \end{itemize}
+
+        \begin{columns}
+            \column{.52\linewidth}
+            \begin{itemize}
+                \item \textbf{Input}\\
+                    I will text you if the train is l
+            \end{itemize}
+            \column{.4\linewidth}
+            \begin{itemize}
+                \item \textbf{Sorted completions}\\
+                    \visible<2->{late}%
+                    \visible<3->{, lovely}%
+                    \visible<4>{, lazy}
+            \end{itemize}
+        \end{columns}
+    \end{example}
+\end{frame}
+
+\begin{frame}[fragile]{How it is done: The easy generalization step}
+    \begin{pythoncode}
+        def bigrams(text):
+            """Convert text to list of bigram tokens."""
+            return [text[n:n+2] for n in range(len(text) - 1)]
+
+        
+        brown.words()[:4]
+        >>> "T
+        bigrams(brown.words())[:3]
+        >>> [["The", "Fulton"], ["Fulton", "County"], ["County", "Grand"]]
+    \end{pythoncode}
+
+    \begin{pythoncode}
+        brown_bigrams = bigrams(brown.words())
+        total = len(brown_bigrams)
+        brown_bicounts = Counter(brown_bigrams)
+        for bigram in brown_bicounts:
+            brown_bicounts[bigram] = brown_bicounts[bigram]/total
+    \end{pythoncode}
+\end{frame}
+
+\begin{frame}[fragile]{How it is done: The super-easy part}
+    \begin{pythoncode}
+        def bigram_completions(word, previous_word, counts):
+            # set of all compatible bigrams
+            comps = [comp for comp in counts
+                     if comp[0] == previous_word and
+                        comp[-1].startswith(word)]
+            # sort the bigram completions
+            ordered_ngrams = sorted(comps,
+                                    key=lambda x: counts[x],
+                                    reverse=True)
+            # only keep second word of each bigram
+            return [ngram[-1] for ngram in ordered_ngrams]
+    \end{pythoncode}
+\end{frame}
+
+\end{document}
+
+linguistic evaluation of n-gram hypothesis:
+    non-local stuff matters, too
+    but grammaticality illusions also point in other direction
