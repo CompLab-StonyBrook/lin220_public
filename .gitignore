@@ -1,3 +1,16 @@
+*.pygtex
+*.pygstyle
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.nav
+*.out
+*.snm
+*.synctex.gz
+*.tex.latexmain
+*.toc
+*.vrb
 .ipynb_checkpoints/
 assessments/
 **/.ipynb_checkpoints
