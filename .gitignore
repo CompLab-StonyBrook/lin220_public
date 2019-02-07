@@ -1,3 +1,4 @@
+*.pdfpc
 .ipynb_checkpoints/
 assessments/
 **/.ipynb_checkpoints
