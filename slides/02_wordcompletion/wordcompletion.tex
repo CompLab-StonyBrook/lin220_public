@@ -53,10 +53,11 @@
               consists of all listed words that start with \Purple{w}:
     \end{itemize}
 
-    \[
-        \text{completions}(\Purple{w}) =
-            \{ w' \mid w' \text{ starts with } \Purple{w} \}
-    \]
+    \begin{align*}
+        \text{completions}(\Purple{w}) = \{ \Teal{w'} \mid &
+              \Teal{w'} \text{ is a word of English, and}\\
+            & \Teal{w'} \text{ starts with } \Purple{w} \}
+    \end{align*}
 \end{frame}
 
 \begin{frame}[fragile]{Attempt 1 [cont.]}
@@ -120,7 +121,7 @@
     \end{itemize}
 \end{frame}
 
-\begin{frame}{Probability = Frequency (?)}
+\begin{frame}{Probability = frequency (?)}
     \begin{itemize}
         \item We only want to show the \highlight{most likely completions}.
         \item But what is most likely?
@@ -206,14 +207,15 @@
         \end{description}
     \end{itemize}
 
-    \begin{block}{Some common corpora}
+    \begin{block}{Some common corpora in Python's NLTK}
         \begin{description}
             \item[Brown] 1 million words, tagged, 500 samples across 15 genres (fiction, news paper, \ldots)
             \item[Gutenberg] 1.8 million words, 18 classic texts of fiction
             \item[Penn] 40k words, tagged and parsed
             \item[Reuters] 1.3 million words, news documents
             \item[Switchboard] 36 phone calls, fully transcribed and parsed
-            \item[Wordlist] 960k words (no repetitions) and 20k affixes for 8 languages
+            \item[Wordlist] 960k words (no repetitions) and 20k affixes\\
+                            for 8 languages
         \end{description}
     \end{block}
 \end{frame}
@@ -476,13 +478,13 @@
         def bigram_completions(word, previous_word, counts):
             # set of all compatible bigrams
             comps = [comp for comp in counts
-                     if comp[0] == previous_word and
+                     if comp[:-1] == previous_word and
                         comp[-1].startswith(word)]
             # sort the bigram completions
             ordered_ngrams = sorted(comps,
                                     key=lambda x: counts[x],
                                     reverse=True)
-            # only keep second word of each bigram
+            # only keep last word of each bigram
             return [ngram[-1] for ngram in ordered_ngrams]
     \end{pythoncode}
 \end{frame}
@@ -511,13 +513,14 @@
             unless you're an endocrinologist.
         \end{example}
 
-        \item Word choices depend greatly on genre, target audience, age of the speaker, and so on.
+        \item Word choices depend greatly on genre, target audience,\\
+              age of the speaker, and so on.
     \end{itemize}
 
     \begin{block}{Common fixes}
         \begin{itemize}
             \item Use frequencies from the appropriate genre\\
-                  (\textbf{BUT:} must be able to determine genre first)
+                  (\textbf{BUT:} must be able to reliably determine genre first)
             \item Learn directly from the use case\\
                   (e.g.~analyze all text messages on phone)
         \end{itemize}
@@ -548,12 +551,12 @@
     \begin{itemize}
         \item It is tempting to move to longer and longer n-grams\\
               in order to handle long-distance dependencies.
-        \item But this has two problems:
+        \item But this has \highlight{two problems}:
                 \begin{description}
                     \item[data sparsity] longer n-grams require too much data
-                    \item[storage] longer n-grams require lots of storage
+                    \item[storage needs] longer n-grams require lots of storage
                 \end{description}
-        \item Data sparsity is much more severe than storage.
+        \item Data sparsity is much more severe than storage needs.
     \end{itemize}    
 \end{frame}
 
@@ -580,13 +583,16 @@
     \end{block}
 
     \begin{itemize}
-        \item \textbf{Conclusion:} with large n, most n-grams are never encountered
+        \item \textbf{Conclusion:}
+               with large n, most n-grams are\\
+               \highlight{never encountered} in a corpus
+               $\Rightarrow$ frequency 0
     \end{itemize}
 \end{frame}
 
 \begin{frame}{Things get worse: A more realistic estimate}
     \begin{itemize}
-        \item The Unix dictionary american-english-insane has\\
+        \item The Linux dictionary american-english-insane has\\
             650,000 entries.
         \item This makes the numbers much worse.\\
             Can you guess how many 5-grams there are then?
@@ -603,7 +609,7 @@
         }
 \end{frame}
 
-\begin{frame}{Trick 1: Stemming and Lemmatization}
+\begin{frame}{Trick 1: Stemming and lemmatization}
     \begin{itemize}
         \item Removing inflectional markers reduces number of words
         \item Two solutions:
@@ -628,7 +634,7 @@
     \end{example}
 \end{frame}
 
-\begin{frame}{Trick 1: Stemming and Lemmatization [cont.]}
+\begin{frame}{Trick 1: Stemming and lemmatization [cont.]}
     \begin{description}
         \item[lemmatization] stemming with context information
     \end{description}
@@ -651,7 +657,27 @@
     \end{block}
 \end{frame}
 
-\begin{frame}{Trick 2: Statistics}
+\begin{frame}{Trick 2: POS tagging}
+    \begin{itemize}
+        \item Every word has a part of speech (POS).
+        \item If we know the POS of a word, we can use that for\\
+              estimating probabilities.
+    \end{itemize}
+
+    \begin{example}
+        \begin{itemize}
+            \item \textbf{User input:} an
+            \item \textbf{Preceding words:} to
+            \item \textbf{Completions:} an (Det), annoint (V)
+            \item \textbf{Suggestion:} to annoint
+            \item \textbf{Reasoning:}
+                    even though \emph{to an} is more common than \emph{to annoint}, 
+                    \emph{to V} is more common than \emph{to Det}.
+        \end{itemize}
+    \end{example}
+\end{frame}
+
+\begin{frame}{Trick 3: Statistics}
     \begin{itemize}
         \item \textbf{Backoff Method}\\
             If an n-gram has frequency $0$, use the frequency of the corresponding $(n-1)$-gram.
@@ -668,19 +694,191 @@
     \end{block}
 \end{frame}
 
-\begin{frame}{Another problem: storage}
-    % fixme
+\begin{frame}{Another problem: Storage}
+    \begin{itemize}
+        \item While storage space is increasing with each year,\\
+              you don't want to waste GB on storing n-gram frequencies.
+        \item We want a storage solution that is
+                \begin{itemize}
+                    \item compact,
+                    \item easy to expand,
+                    \item \highlight{fast to search}.
+                \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Searching through a list}
+    List search is a much studied problem.
+    %
+    \begin{block}{Simplest Algorithm: Linear Search}
+        \begin{itemize}
+            \item Start at beginning of list.
+            \item Move from left to right until the wanted item has been found.
+            \item If no match is found before end of list, item is not in list.
+        \end{itemize}
+    \end{block}
+
+    \pause
+    \textbf{Searching for \emph{yogurt}}
+    %
+    \begin{center}
+        \begin{tikzpicture}
+            \foreach \Label/\Pos in {0/0,1/5.5,2/11,3/16.5,4/22,5/27.5}
+                \node[draw=blue!75,fill=blue!25,circle,thick] (\Label) at (\Pos em, 0) {\Label};
+
+            \foreach \Start/\Target/\Label in {0/1/'apple',1/2/'banana',2/3/'orange',3/4/'yogurt',4/5/'zoo'}
+                \draw[blue!75,->] (\Start) to node [above] {\Label} (\Target);
+
+            \foreach \Time/\Node in {3/0,4/1,5/2,6/3}
+                \draw[visible on=<\Time>,->,red,very thick] ($(\Node.south)-(0,2em)$) to (\Node.south);
+        \end{tikzpicture}
+    \end{center}
+\end{frame}
+
+\begin{frame}{Evaluating linear search}
+    \begin{itemize}
+        \item Two criteria for evaluating algorithms:\\
+            correctness and efficiency
+        \item An algorithm is \highlight{correct} if and only if it is both sound and complete.
+            %
+            \begin{description}
+                \item[sound] algorithm only returns correct solutions
+                \item[complete] algorithm can find all correct solutions
+            \end{description}
+        \item Linear search is correct.
+                \begin{itemize}
+                    \item if item is not in list, linear search will not claim otherwise
+                    \item if item is in list, linear search will find it
+                \end{itemize}
+        \item But it is also slow.
+                \begin{itemize}
+                    \item In a list with $n$ items, it may take $n$ steps to find item.
+                    \item And we have tons of n-grams!
+                \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Improving on lists: Prefix trees\slash Tries}
+    \begin{block}{Prefix Trees: The Basic Idea}
+        Exploit the fact that many items share a common start
+    \end{block}
+
+    \begin{center}
+        \small
+        \begin{tikzpicture}[
+            stop/.style = {circle,fill=blue!25, minimum size=2em},
+            cont/.style = {circle,fill=red!25, minimum size=2em}
+            ]
+
+            \node[cont] (root) at (0,0) {};
+            \node [above=.1em of root, font=\bfseries\footnotesize] {Example: Prefix tree for word list};
+            \foreach \Source/\Arc/\Label/\Status/\Offset in {%
+                                                            root/a/a/stop/-8,
+                                                            root/b/b/cont/8,
+                                                            a/n/an/stop/-5,
+                                                            a/l/al/cont/0,
+                                                            a/t/at/stop/5,
+                                                            al/l/all/stop/0,
+                                                            b/e/be/stop/-4.5,
+                                                            b/i/bi/stop/4.5,
+                                                            be/d/bed/stop/-2.5,
+                                                            be/e/bee/stop/2.5,
+                                                            bi/d/bid/stop/-3.5,
+                                                            bi/n/bin/stop/0,
+                                                            bi/t/bit/stop/3.5%
+                                                        }
+                {
+                    \node[\Status] (\Label) at ($(\Source)+(\Offset em,-4em)$) {\Label};
+                    \draw[->] (\Source) to node [left] {\Arc} (\Label);
+                }
+        \end{tikzpicture}
+    \end{center}
+\end{frame}
+
+\begin{frame}{Searching through a prefix tree}
+    \textbf{Query:} Is word $w$ in our dictionary?\\
+    \textbf{Algorithm:} follow branches that spell $w$; do we finish in \\
+    accepting (= blue) node?
+    %
+    \begin{example}
+        \begin{enumerate}
+            \item \textbf{Query:} bit\\
+                  \textbf{Search Path:} b-i-t, \colored{blue!75}{blue} $\Rightarrow$ \colored{blue!75}{accept}
+                  %
+            \item \textbf{Query:} al\\
+                  \textbf{Search Path:} al, \colored{red!75}{red} $\Rightarrow$ \colored{red!75}{reject}
+                  %
+            \item \textbf{Query:} bits\\
+                  \textbf{Search Path:} b-i-t, \colored{red!75}{stuck} $\Rightarrow$ \colored{red!75}{reject}
+        \end{enumerate}
+    \end{example}
+\end{frame}
+
+\begin{frame}{Prefix tree for n-grams}
+    \begin{itemize}
+        \item A prefix tree for a list of n-grams works exactly the same way,
+              except that each arc is \highlight{labeled with a word} instead. 
+    \end{itemize}
+
+    \begin{center}
+        fixme: draw a nice picture here
+    \end{center}
+\end{frame}
+
+\begin{frame}{Excursus: It's the software, stupid!}
+    \begin{itemize}
+        \item We usually think of technological progress in terms of faster hardware, more memory, and so on.
+        \item A good \highlight{algorithm trumps hardware} improvements.
+    \end{itemize}
+
+    \begin{example}
+        \begin{itemize}
+            \item Even the fastest current gen processor will take a long time\\
+                to do linear search on a list with 18 quintillion items.
+            \item With prefix trees it is almost instantaneous (and incremental!).
+            \item They are also more memory efficient,\\
+                  as long as your items have lots of overlap.
+            \item \textbf{BUT:} They are harder to implement.
+        \end{itemize}
+    \end{example}
+\end{frame}
+
+\begin{frame}{Yet another problem: bad input}
+    \begin{itemize}
+        \item What if a user makes a mistake?
+    \end{itemize}
+    \begin{center}
+        \begin{tabular}{c@{\hspace{2em}}c}
+            \toprule
+            \textbf{Input} & \textbf{Intended?}\\
+            \midrule
+            trian & train, trying, Brian, \ldots\\
+            your & your, you're\\
+            @rdvark & aardvark\\
+            \bottomrule
+        \end{tabular}
+    \end{center}
+    \begin{itemize}
+        \item This requires a spellchecker.\\
+              But more on that next time\ldots
+    \end{itemize}
 \end{frame}
 
 \begin{frame}{Summary}
-    A good word completion model needs a lot of components:
+    A good word completion model needs \highlight{lots of components}:
 
     \begin{itemize}
         \item corpora from various genres
         \item n-grams for limited context information
         \item sophisticated statistics to deal with sparse data
         \item a fast and compact data structure for storage
-        \item extensions: stemming\slash lemmatizer
+        \item extensions:
+            \begin{itemize}
+                \item stemming\slash lemmatizer
+                \item POS tagging
+                \item spell checker
+                \item efficient storage
+            \end{itemize}
     \end{itemize}
 
     We have barely scratched the surface of any of those.
@@ -694,23 +892,23 @@
             \item types VS tokens
             \item data sparsity
             \item smoothing and backoff
-            \item stemming, tagging
+            \item stemming, lemmatization
+            \item POS tagging
         \end{itemize}
     \end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]{New Python concepts}
     \begin{pythoncode}
-        # New Python tricks
         sorted(some_list,
-               # reverse order
+               # sort in reverse?
                reverse=True, 
                # what property to use for sorting
                key=lambda x: something_with_x)
 
-        range(n)  # all numbers from 0 to n-1
+        range(n)  # all numbers from 0 to n-1, in order
 
-        some_string.startwith(x)  # does some_string start with x?
+        some_string.startswith(x)  # does some_string start with x?
     \end{pythoncode}
 \end{frame}
 \end{document}
