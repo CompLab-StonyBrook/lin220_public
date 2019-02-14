@@ -233,7 +233,7 @@
         brown_counts = Counter(brown_text)
         # convert counts to frequencies
         for word in brown_counts:
-            brown_counts[word] = brown_counts[word]/total
+            brown_counts[word] /= total
     \end{pythoncode}
 
     \begin{itemize}
@@ -258,7 +258,7 @@
             comps = [comp for comp in counts
                      if comp.startswith(word)]
             return sorted(comps,
-                          key=lambda x: counts[x],
+                          key=counts.get,
                           reverse=True)
     \end{pythoncode}
 
@@ -469,23 +469,23 @@
         total = len(brown_bigrams)
         brown_bicounts = Counter(brown_bigrams)
         for bigram in brown_bicounts:
-            brown_bicounts[bigram] = brown_bicounts[bigram]/total
+            brown_bicounts[bigram] /= total
     \end{pythoncode}
 \end{frame}
 
 \begin{frame}[fragile]{How it is done: The trickier part}
     \begin{pythoncode}
-        def bigram_completions(word, previous_word, counts):
-            # set of all compatible bigrams
-            comps = [comp for comp in counts
-                     if comp[:-1] == previous_word and
-                        comp[-1].startswith(word)]
-            # sort the bigram completions
-            ordered_ngrams = sorted(comps,
-                                    key=lambda x: counts[x],
-                                    reverse=True)
-            # only keep last word of each bigram
-            return [ngram[-1] for ngram in ordered_ngrams]
+def bigram_completions(word, previous_word, counts):
+    # set of all compatible bigrams
+    comps = [comp for comp in counts
+             if comp[:-1] == previous_word and
+                comp[-1].startswith(word)]
+    # sort the bigram completions
+    ordered_ngrams = sorted(comps,
+                            key=counts.get,
+                            reverse=True)
+    # only keep last word of each bigram
+    return [ngram[-1] for ngram in ordered_ngrams]
     \end{pythoncode}
 \end{frame}
 
@@ -739,7 +739,8 @@
     \begin{itemize}
         \item Two criteria for evaluating algorithms:\\
             correctness and efficiency
-        \item An algorithm is \highlight{correct} if and only if it is both sound and complete.
+        \item An algorithm is \highlight{correct} if and only if\\
+              it is both sound and complete.
             %
             \begin{description}
                 \item[sound] algorithm only returns correct solutions
@@ -821,7 +822,127 @@
     \end{itemize}
 
     \begin{center}
-        fixme: draw a nice picture here
+        \begin{tikzpicture}[
+            stop/.style = {circle,fill=blue!25, minimum size=2em},
+            cont/.style = {circle,fill=red!25, minimum size=2em}
+            ]
+
+            \node[cont] (root) at (0,0) {};
+            \node [above left=.1em and -2.5em of root, font=\bfseries\footnotesize]
+                  {Example: Prefix tree for trigram frequencies};
+            \foreach \Source/\Arc/\Label/\Status/\Offset in {%
+                                                            root/a//cont/-8,
+                                                            root/to//cont/8,
+                                                            a/new//cont/-7,
+                                                            a/joy//cont/0,
+                                                            a/bug//cont/7,
+                                                            new/car/.07/stop/-3.5,
+                                                            new/house/.05/stop/3.5,
+                                                            joy/ride/.3/stop/0,
+                                                            joy/in/.05/stop/3,
+                                                            bug/seems/.03/stop/0,
+                                                            to/the//cont/0,
+                                                            the/Batmobile/.5/stop/0%
+                                                        }
+                {
+                    \node[\Status] (\Arc) at ($(\Source)+(\Offset em,-4em)$) [font=\small] {\Label};
+                    \draw[->] (\Source) to node [left] {\Arc} (\Arc);
+                }
+        \end{tikzpicture}
+    \end{center}
+\end{frame}
+
+\begin{frame}{A mixed prefix tree}
+    \begin{itemize}
+        \item Prefix trees can store frequencies for all $m < n$
+        \item useful for backoff methods
+    \end{itemize}
+    \begin{center}
+        \only<1>{%
+        \begin{tikzpicture}[
+            stop/.style = {circle,fill=blue!25, minimum size=2em},
+            cont/.style = {circle,fill=red!25, minimum size=2em}
+            ]
+
+            \node[cont] (root) at (0,0) {};
+            \node [above left=.1em and -2.5em of root, font=\bfseries\footnotesize]
+                  {Example: Prefix tree for trigram frequencies};
+            \foreach \Source/\Arc/\Label/\Status/\Offset in {%
+                                                            root/a//cont/-8,
+                                                            root/to//cont/8,
+                                                            a/new//cont/-7,
+                                                            a/joy//cont/0,
+                                                            a/bug//cont/7,
+                                                            new/car/.07/stop/-3.5,
+                                                            new/house/.05/stop/3.5,
+                                                            joy/ride/.3/stop/0,
+                                                            joy/in/.05/stop/3,
+                                                            bug/seems/.03/stop/0,
+                                                            to/the//cont/0,
+                                                            the/Batmobile/.5/stop/0%
+                                                        }
+                {
+                    \node[\Status] (\Arc) at ($(\Source)+(\Offset em,-4em)$) [font=\small] {\Label};
+                    \draw[->] (\Source) to node [left] {\Arc} (\Arc);
+                }
+        \end{tikzpicture}}
+        \only<2>{%
+        \begin{tikzpicture}[
+            stop/.style = {circle,fill=blue!25, minimum size=2em},
+            cont/.style = {circle,fill=red!25, minimum size=2em}
+            ]
+
+            \node[cont] (root) at (0,0) {};
+            \node [above left=.1em and -4.5em of root, font=\bfseries\footnotesize]
+                  {Example: Prefix tree for bigram and trigram frequencies};
+            \foreach \Source/\Arc/\Label/\Status/\Offset in {%
+                                                            root/a//cont/-8,
+                                                            root/to//cont/8,
+                                                            a/new/.3/stop/-7,
+                                                            a/joy/.2/stop/0,
+                                                            a/bug/.1/stop/7,
+                                                            new/car/.07/stop/-3.5,
+                                                            new/house/.05/stop/3.5,
+                                                            joy/ride/.3/stop/0,
+                                                            joy/in/.05/stop/3,
+                                                            bug/seems/.03/stop/0,
+                                                            to/the/.5/stop/0,
+                                                            the/Batmobile/.5/stop/0%
+                                                        }
+                {
+                    \node[\Status] (\Arc) at ($(\Source)+(\Offset em,-4em)$) [font=\small] {\Label};
+                    \draw[->] (\Source) to node [left] {\Arc} (\Arc);
+                }
+        \end{tikzpicture}}%
+        \only<3>{%
+        \begin{tikzpicture}[
+            stop/.style = {circle,fill=blue!25, minimum size=2em},
+            cont/.style = {circle,fill=red!25, minimum size=2em}
+            ]
+
+            \node[cont] (root) at (0,0) {};
+            \node [above left=.1em and -7.5em of root, font=\bfseries\footnotesize]
+                  {Example: Prefix tree for unigram, bigram and trigram frequencies};
+            \foreach \Source/\Arc/\Label/\Status/\Offset in {%
+                                                            root/a/.7/stop/-8,
+                                                            root/to/.3/stop/8,
+                                                            a/new/.3/stop/-7,
+                                                            a/joy/.2/stop/0,
+                                                            a/bug/.1/stop/7,
+                                                            new/car/.07/stop/-3.5,
+                                                            new/house/.05/stop/3.5,
+                                                            joy/ride/.3/stop/0,
+                                                            joy/in/.05/stop/3,
+                                                            bug/seems/.03/stop/0,
+                                                            to/the/.5/stop/0,
+                                                            the/Batmobile/.5/stop/0%
+                                                        }
+                {
+                    \node[\Status] (\Arc) at ($(\Source)+(\Offset em,-4em)$) [font=\small] {\Label};
+                    \draw[->] (\Source) to node [left] {\Arc} (\Arc);
+                }
+        \end{tikzpicture}
+        }
     \end{center}
 \end{frame}
 
@@ -886,15 +1007,13 @@
 
 \begin{frame}[fragile]{New concepts}
     \begin{itemize}
-        \begin{itemize}
-            \item corpora (common words, what types there are)
-            \item n-grams (word = unigram)
-            \item types VS tokens
-            \item data sparsity
-            \item smoothing and backoff
-            \item stemming, lemmatization
-            \item POS tagging
-        \end{itemize}
+        \item corpora (common words, what types there are)
+        \item n-grams (word = unigram)
+        \item types VS tokens
+        \item data sparsity
+        \item smoothing and backoff
+        \item stemming, lemmatization
+        \item POS tagging
     \end{itemize}
 \end{frame}
 
@@ -904,7 +1023,7 @@
                # sort in reverse?
                reverse=True, 
                # what property to use for sorting
-               key=lambda x: something_with_x)
+               key=some_function)
 
         range(n)  # all numbers from 0 to n-1, in order
 
