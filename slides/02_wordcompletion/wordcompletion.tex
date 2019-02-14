@@ -946,6 +946,45 @@ def bigram_completions(word, previous_word, counts):
     \end{center}
 \end{frame}
 
+\begin{frame}{You try it!}
+    Below is a short text.
+    Do the following:
+    \begin{enumerate}
+        \item Tokenize the text (removing punctuation and capitalization).
+        \item Draw a prefix tree that encodes the bigram and trigram frequencies.
+        \item You do not need to fully calculate the frequencies.
+              Fractions are enough (e.g. $\frac{3}{17}$).
+    \end{enumerate}
+
+    \begin{quote}
+        Of course a powerful institution --- which the police is ---
+        can convince the politicians that a police police to police the police is bad policy.
+    \end{quote}
+
+    % solution
+    % ========
+    % of - course - a
+    % course - a - powerful
+    % a - powerful - institution
+    %   - police - police
+    % powerful - institution - which
+    % institution - which - the
+    % which - the - police
+    % the - police - is
+    %     - politicians - that
+    % police - is - can
+    %             - bad
+    %        - police - to
+    %        - to - police
+    %        - the - police
+    % is - can - convince
+    %    - bad - policy
+    % can - convince - the
+    % convince - the - politicians
+    % politicians - that - a
+    % that - a - police
+\end{frame}
+
 \begin{frame}{Excursus: It's the software, stupid!}
     \begin{itemize}
         \item We usually think of technological progress in terms of faster hardware, more memory, and so on.
