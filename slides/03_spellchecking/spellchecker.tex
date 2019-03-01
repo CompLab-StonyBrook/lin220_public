@@ -18,11 +18,24 @@
 \end{frame}
 }
 
-
-\begin{frame}{What we Know About Spell Checking So Far}
+\begin{frame}{Where we are so far\ldots}
     \begin{itemize}
-        \item dictionary as a prefix tree
-        \item spell checking = lookup in prefix tree
+        \item n-grams for word completions
+        \item use frequencies to pick most likely completion
+        \item prefix trees as efficient storage and search
+        \item It's not linguistically perfect,\\
+              but it does well enough.
+    \end{itemize}
+
+    \begin{block}{One big problem}
+        \visible<2>{What if the user made a typo?}
+    \end{block}
+\end{frame}
+
+\begin{frame}{Spell checking: A naive solution}
+    \begin{itemize}
+        \item word list (e.g.~stored as prefix tree)
+        \item spell checking = lookup in word list
             \begin{itemize}
                 \item word found $\Rightarrow$ spelled correctly
                 \item word not found $\Rightarrow$ spelled incorrectly
@@ -31,25 +44,26 @@
     \end{itemize}
 
     \pause
-    \begin{block}{Open Issues}
+    \begin{block}{Open issues}
         \begin{itemize}
-            \item Not all misspellings are easy to detect.
             \item How do we determine the correct spelling of a mistyped word?
+            \item Not all misspellings are easy to detect.
             \item What if a correctly spelled word is not in the dictionary?\\
                 \subpoint{specialized terminology, proper names, neologisms, slang, loan words, \ldots}
         \end{itemize}
     \end{block}
 \end{frame}
 
-\begin{frame}{Assessing the Problem}
+\begin{frame}{Assessing the problem}
     \begin{itemize}
-        \item Never type a single line of code before you understand the problem!
+        \item Never type a single line of code\\
+              before you understand the problem!
         \item Think about the \highlight{parameters of the problem}.
         \item Solving the wrong problem is pointless.
     \end{itemize}
     %
     \pause
-    \begin{block}{Parameters of the Spell Checking Problem}
+    \begin{block}{Parameters of the spell checking problem}
         \begin{itemize}
             \item How is the spell checker to be used?\\
                 \subpoint{automatic\slash auto correction VS interactive\slash suggestions to user}
@@ -61,13 +75,13 @@
     \end{block}
 \end{frame}
 
-\begin{frame}{A Typology of Spelling Mistakes}
+\begin{frame}{A typology of spelling mistakes}
     \begin{itemize}
         \item \textbf{Cause}\\
-            accidental typo $\Leftrightarrow$ spelling confusion\slash unawareness of correct spelling
+            accidental typo $\Leftrightarrow$ unawareness of correct spelling
         \item \textbf{Number}\\
             single-error $\Leftrightarrow$ multi-error
-        \item \textbf{Error Type}
+        \item \textbf{Error type}
             \begin{description}
                 \item[split] illicit space\\
                     \subpoint{quin tuplets, the set up, atoll way}
@@ -81,86 +95,102 @@
     \end{itemize}
 \end{frame}
 
-\begin{frame}{A Difficulty Hierarchy of Tasks}
+\begin{frame}{A difficulty hierarchy of tasks}
     \begin{itemize}
-        \item Both typos and spelling confusion can be very hard.\\
+        \item Both typos and spelling confusion can be very hard.
             \begin{itemize}
                 \item \emph{labelled} for \emph{labeled}: easy
                 \item \emph{awter} for \emph{water}: easy
                 \item \emph{nitch} for \emph{niche}: tricky
                 \item \emph{awre} for \emph{water}: tricky
             \end{itemize}
-        \item Single-error is easier than multi-error.
-        \item Non-word errors are easier than real-word errors.
-        \item Difficulty of real-word errors scales with complexity of context: 
-            \begin{itemize}
+        \item Single-error $<$ multi-error
+        \item Non-word errors $<$ real-word errors
+        \item Difficulty of real-word errors scales with complexity of context:
+            \begin{enumerate}
                 \item local syntactic configuration
                 \item non-local syntactic configuration
                 \item word meaning
                 \item discourse\slash cross-sentence
                 \item world knowledge
-            \end{itemize}
+            \end{enumerate}
     \end{itemize}
-    %
 \end{frame}
-%
-\begin{frame}{Examples of Increasing Context Complexity}
+
+\begin{frame}{Examples of increasing context complexity}
     \begin{itemize}
-        \item \textbf{Local Syntactic Configuration}\\
+        \item \textbf{Local syntactic configuration}\\
               \emph{\colored{purple}{Their} \colored{teal}{are} some biscuits on the counter.}
-        \item \textbf{Non-Local Syntactic Configuration}\\
+        \item \textbf{Non-local syntactic configuration}\\
               \emph{\colored{teal}{The man} sitting at the bar \colored{purple}{seem} to be enjoying the atmosphere.}
-        \item \textbf{Word Meaning}\\
+        \item \textbf{Word meaning}\\
               \emph{We still have to pay off the mortgage on our \colored{purple}{mouse}.}
         \item \textbf{Discourse}\\
               \emph{It's like that time they canceled Futurama. I was so \colored{purple}{bad}.}
-        \item \textbf{World Knowledge}\\
+        \item \textbf{World knowledge}\\
               \emph{This course is taught at Stony \colored{purple}{Book} University.}
     \end{itemize}
 \end{frame}
 
-\begin{frame}{How Much Can We Handle Efficiently?}
+\begin{frame}{Proper names are impossibly hard}
+    \begin{columns}
+        \column{.4\linewidth}
+        \centering
+        \includegraphics[height=12em]{./img/xexyz}
+        \visible<2->{\textbf{Xexyz}}
+        \column{.4\linewidth}
+        \centering
+        \includegraphics[height=12em]{./img/mxyzptlk}\\
+        \visible<3>{\textbf{Mister Mxyzptlk}}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{How much can we handle efficiently?}
     \begin{itemize}
-        \item Remember what we've said many times before:\\
+        \item Always remember:\\
             meaning is hard, world knowledge nigh impossible.
-        \item Even non-local syntactic configurations are difficult to deal with.
+        \item Even non-local syntactic configurations are difficult. 
         \item So we consider only models that handle at most\\
             \highlight{local syntactic configurations}.
     \end{itemize}
 \end{frame}
 
-\begin{frame}{$n$-Grams Handle Local Context}
+\begin{frame}{$n$-Grams handle local context}
     \begin{itemize}
         \item $n$-gram models can easily detect local real-word errors.
     \end{itemize}
     %
     \begin{example}
         \begin{itemize}
-            \item No English sentence ever contains the bigram \emph{their are}.
-            \item Consequently, every instance of \emph{their are} must be a misspelling.
+            \item English sentences rarely contain the bigram \emph{their are}.
+            \item Hence instances of \emph{their are} are misspellings.
         \end{itemize}
     \end{example}
     %
     \pause
     \textbf{Problems:}
     \begin{itemize}
-        \item Still problem with correct words that are not listed in dictionary.
-        \item For automatic spell checker, what about cases like \emph{the man are}?\\
-            \subpoint{change \emph{man} to \emph{men} VS change \emph{are} to \emph{is}}
-        \item For interactive spell checker, how do we find all relevant suggestions?
+        \item False positive: incorrectly flags correct words\\
+              if they're not in our word list
+        \item Sparse data problem all over again.
+        \item How do we go from detecting likely errors to\\
+              finding likely corrections?
+        \item For automatic spell checker, what about cases like\\
+              \emph{the man are}?\\
+              \subpoint{change \emph{man} to \emph{men} VS change \emph{are} to \emph{is}}
     \end{itemize}
 \end{frame}
 
-\begin{frame}{Unlisted Words are Inevitable}
+\begin{frame}{Unlisted words are inevitable}
     \begin{itemize}
-        \item It is impossible to have every word of English listed in the dictionary.
+        \item No word list can ever contain all words of English.
         \item It is also \highlight{undesirable}:
             \begin{itemize}
                 \item No speaker knows or uses all words of English.
-                \item Suppose the user knows only 10\% of the words in our dictionary.\\
-                      Then there is a good chance that a non-word error by the user is a real-word error for our model.
+                \item Suppose John knows only 10\% of the words in our list.\\
+                      Then John will make non-word errors that are real-word errors for the model.
                 \item \textbf{Bottom line}\\
-                      The bigger the dictionary, the harder it is to detect misspellings.
+                      A big word list \highlight{makes finding misspellings harder}. 
             \end{itemize}
     \end{itemize}
     %
@@ -169,23 +199,208 @@
         \begin{itemize}
             \item Computer scientists use the special term \emph{memoize}.
             \item But for most people \emph{memoize} is a misspelling of \emph{memorize}.
-            \item If the dictionary contains \emph{memoize}, the model performs \textbf{worse}\\
+            \item If the dictionary contains \emph{memoize},\\
+                then the model will perform \textbf{worse}
                 for the majority of users.
         \end{itemize}
     \end{example}
 \end{frame}
 
-\begin{frame}{A Cool Idea That is Hard to Realize}
+\begin{frame}{What does ``hard'' mean?}
+    \begin{itemize}
+        \item A problem is hard if it is difficult to\\
+              design a model that performs well on the task.
+        \item But what does it mean to perform well?\\
+              Detecting both \textbf{\textcolor{blue!75}{positives}} and \highlight{negatives}!\\
+    \end{itemize}
+
+    \begin{center}
+        \begin{tikzpicture}
+            \matrix (m) at (0,0) [matrix of nodes, ampersand replacement=\&] {%
+                              \& \textbf{bad} \& \textbf{good}\\
+                \textbf{bad} \& true positive \& false negative\\
+                \textbf{good}  \& false positive \& true negative\\
+                };
+                \node [left=0em of m-2-1.south west] (spelling) {Spelling is:};
+                \node [above right=0em and -1.25em of m-1-2.north east] (model) {Model says:};
+
+            \begin{pgfonlayer}{background}
+                \fill[brown!25] (m-3-2.south west) -| (spelling.south west) -- (spelling.north west) |- (m-2-2.north west) -- cycle;
+                \fill[SeaGreen4!25] (m-3-2.north west) |- (model.north west) -- (model.north east) -| (m-2-3.north east) -- cycle;
+                \fill[blue!25] (m-3-2.south west) rectangle (m-2-3.north east);
+                \foreach \Start/\End/\Color in {%
+                    2-2/2-3/blue!25,
+                    2-3/2-3/red!50,
+                    3-2/3-3/purple!50,
+                    3-3/3-3/blue!25}
+                    \fill[\Color] (m-\Start.north west) rectangle (m-\End.south east);
+            \end{pgfonlayer}
+        \end{tikzpicture}
+    \end{center}
+
+    \begin{itemize}
+        \item Like in medical tests, \textbf{\textcolor{blue!75}{positive}} does not mean ``good''.
+        \item For spellchecking: \textbf{\textcolor{blue!75}{positive}} = is a misspelled word
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Precision and Recall}
+    There are two measures of model performance:
+
+    \begin{description}
+        \item[Precision] How many posited positives are actual positives?
+        \item[Recall]    How many of the actual positives are\\
+                         recognized as positives?
+    \end{description}
+    
+    \begin{block}{Formal definition}
+        \begin{align*}
+            \text{Precision}
+                &= \frac{%
+                         \text{\color{blue!75}true positives}}{%
+                         \text{\textcolor{blue!75}{true positives} +
+                               \textcolor{purple!75}{false positives}}
+                         }
+                = \frac{\text{\color{blue!75}true positives}}{\text{all posited positives}}\\
+                \\
+            \text{Recall}
+                &= \frac{%
+                         \text{\color{blue!75}true positives}}{%
+                         \text{\textcolor{blue!75}{true positives} +
+                               \textcolor{red!75}{false negatives}}
+                         }
+                = \frac{\text{\color{blue!75}true positives}}{\text{all actual positives}}\\
+        \end{align*}
+    \end{block}
+\end{frame}
+
+\begin{frame}{A calculation example}
+    Our spellchecker performs as follows over 100 words:
+
+    \begin{columns}
+        \column{.5\linewidth}
+        \begin{center}
+            \begin{tabular}{rcc}
+                & \textbf{bad} & \textbf{good}\\
+                \textbf{bad} & 25 & 10\\
+                \textbf{good} & 30 & 35\\
+            \end{tabular}
+        \end{center}
+
+        \column{.5\linewidth}
+        \begin{enumerate}
+            \item \textcolor{blue!75}{True positives}: \visible<2->{\textcolor{blue!75}{25}}
+            \item \textcolor{blue!75}{True negatives}: \visible<3->{\textcolor{blue!75}{35}}
+            \item \textcolor{purple!75}{False positives}: \visible<4->{\textcolor{purple!75}{10}}
+            \item \textcolor{red!75}{False negatives}: \visible<5->{\textcolor{red!75}{30}}
+        \end{enumerate}
+    \end{columns}
+
+    \visible<6->{%
+    \begin{align*}
+        \text{Precision}
+            &= \frac{%
+                     \text{\textcolor{blue!75}{%
+                           \only<6>{true positives}
+                           \only<7->{25}
+                           }}}{%
+                     \text{\textcolor{blue!75}{%
+                           \only<6,7>{true positives}
+                           \only<8->{25}
+                           } +
+                           \textcolor{purple!75}{%
+                           \only<6-8>{false positives}
+                           \only<9->{10}
+                          }}
+                     }
+                \visible<10->{= \frac{25}{35} = 0.71 = 71\%}
+    \end{align*}}
+
+    \medskip
+    \visible<11->{%
+    \begin{align*}
+        \text{Recall}
+            &= \frac{%
+                     \text{\textcolor{blue!75}{%
+                           \only<11>{true positives}
+                           \only<12->{25}
+                           }}}{%
+                     \text{\textcolor{blue!75}{%
+                           \only<11,12>{true positives}
+                           \only<13->{25}
+                           } +
+                           \textcolor{red!75}{%
+                           \only<11-13>{false negatives}
+                           \only<14->{30}
+                          }}
+                     }
+                \visible<15->{= \frac{25}{55} = 0.45 = 45\%}
+    \end{align*}
+    }
+\end{frame}
+
+\begin{frame}{The abstract principle}
+    \begin{example}
+        A large word list
+        \begin{itemize}
+            \item \visible<2->{increases} precision: \visible<3->{correct spellings are less likely to be flagged as incorrect}
+            \item \visible<4->{decreases} recall: \visible<5->{non-word errors by the user\\ are incorrectly treated as correct spellings}
+        \end{itemize}
+    \end{example}
+
+    Precision and recall are quantitative counterparts to\\
+    soundness and completeness:
+
+    \begin{description}
+        \item[sound] If the model says X is a positive, then X is a positive.
+        \item[complete] If X is a positive, then the model says X is a positive.
+    \end{description}
+\end{frame}
+
+\begin{frame}{``I still don't get it!''}
+    Here's the simplistic version:
+
+    \begin{description}
+        \item[low precision] many actual negatives are misclassified as positives;\\
+                             the model is too eager to find positives
+        \item[low recall]    many actual positives are misclassified as negatives;\\
+                             the model misses too many positives
+    \end{description}
+\end{frame}
+
+\begin{frame}{Interim summary}
+    \textbf{Precision and recall}
+    \begin{itemize}
+        \item ``Performing well'' is too vague a notion.
+        \item In order to evaluate models, we need more rigorous metrics.
+        \item Precision and recall allow us to quantify performance\\
+              along two important axes.
+    \end{itemize}
+
+    \textbf{Spelling}
+    \begin{itemize}
+        \item We want to handle at least non-word errors.
+        \item We want to handle at most local syntactic real-word errors.
+        \item We want to be able to detect and suggest corrections.
+        \item A word list of all English words is impossible.
+        \item It is undesirable because it greatly lowers precision.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{A cool idea that is hard to realize}
     \begin{itemize}
         \item One conceivable solution is to \highlight{stratify} the dictionary into
             \begin{itemize}
                 \item a base vocabulary used by all English speakers, and
                 \item optional extensions for specific genres, styles, etc.
             \end{itemize}
-        \item Extensions could be loaded if the text so far fits certain criteria.\\
+        \item Extensions could be loaded if the text so far\\
+              fits certain criteria.\\
             \subpoint{high number of field-specific terms, loan words, etc.}
-        \item To the best of my knowledge, nobody has ever tried anything like this.
-        \item The payoff probably isn't worth the effort.
+        \item To the best of my knowledge,\\
+              nobody has ever tried anything like this.
+        \item The payoff probably isn't worth the effort.\\
+              So what's the \highlight{alternative?}
     \end{itemize}
 \end{frame}
 
@@ -208,89 +423,48 @@
     \end{example}
     %
     \begin{itemize}
-        \item Only certain sequences of characters can occur in English words.
+        \item Only some sequences of characters can occur in English words.
         \item You guessed it: \highlight{n-grams again!}
     \end{itemize}
 \end{frame}
 
-\begin{frame}{Character $n$-Grams for Non-Word Detection}
-    \textbf{Non-Word Detection Algorithm}
-    \begin{itemize}
-        \item Compile list of character bigrams that occur in words in dictionary.
-        \item If a word
+\begin{frame}{Character $n$-grams for non-word detection}
+    \textbf{Non-word detection algorithm}
+    \begin{enumerate}
+        \item Compile list of character bigrams\\
+              that occur in words in the word list.
+        \item A word is a non-word if it
             \begin{enumerate}
                 \item is not in the dictionary, and
                 \item contains an illicit character bigram
             \end{enumerate}
-            it is a non-word.
-    \end{itemize}
-\end{frame}
+    \end{enumerate}
 
-\begin{frame}{Excursus: Storing Character Bigram Lists}
-    \begin{itemize}
-        \item The list of licit character bigrams could be stored as a prefix tree.
-        \item But prefix trees are a little odd in this case:
-            \begin{itemize}
-                \item only two levels deep
-                \item no use for good\slash bad distinction (i.e.\ red and blue)
-            \end{itemize}
-    \end{itemize}
-    %
-    \begin{center}
-        \begin{tikzpicture}[
-            stop/.style = {circle,fill=blue!25, minimum size=2em},
-            cont/.style = {circle,fill=red!25, minimum size=2em}
-            ]
+    \begin{example}
+        \begin{itemize}
+            \item Word list: bee, bored, doom
+            \item Character bigrams: be, ee, bo, or, re, ed, do, oo, om
+        \end{itemize}
 
-            \node[cont] (root) at (0,0) {};
-
-            \foreach \Source/\Arc/\Label/\Status/\Offset in {%
-                                                            root/a/a/cont/-8,
-                                                            root/k/k/cont/8,
-                                                            a/a/aa/stop/-5,
-                                                            a/b/ab/stop/0,
-                                                            a/c/ac/stop/5,
-                                                            k/a/ka/stop/-4.5,
-                                                            k/l/kl/stop/4.5
-                                                        }
-                {
-                    \node[\Status] (\Label) at ($(\Source)+(\Offset em,-4em)$) {\Label};
-                    \draw[->] (\Source) to node [left] {\Arc} (\Label);
-                }
-        \end{tikzpicture}
-    \end{center}
-\end{frame}
-
-\begin{frame}{Excursus: Storing Character Bigram Lists [cont.]}
-    \begin{itemize}
-        \item Simpler solution: \highlight{matrix\slash array}
-        \item Rows and columns labeled by characters.
-        \item If $\colored{blue!75}{x}\colored{orange}{y}$ is a licit character bigram, enter $1$ in the cell in row \colored{blue!75}{x} and column \colored{orange}{y}.
-    \end{itemize}
-    %
-    \begin{center}
-        \begin{tabular}{r|ccccc}
-            & \colored{orange}{$\cdots$} & \colored{orange}{k} & \colored{orange}{l} & \colored{orange}{m} & \colored{orange}{$\cdots$}\\
-            \hline
-            \colored{blue!75}{$\vdots$}\\
-            \colored{blue!75}{k}          &  & 1 & 1 & 0 & \\
-            \colored{blue!75}{l}          &  & 1 & 1 & 1 & \\
-            \colored{blue!75}{m}          &  & 0 & 0 & 1 & \\
-            \colored{blue!75}{$\vdots$}\\
+        \centering
+        \begin{tabular}{rccc}
+            \toprule
+            \textbf{Word} & \textbf{In list?} & \textbf{Illicit bigram?} & \textbf{Verdict?}\\            
+            \midrule
+            bee & yes & --- & good\\
+            boredom & no & no & good\\
+            bnick & no & yes & bad\\
+            beeeereed & no & no & good\\
+            \bottomrule
         \end{tabular}
-    \end{center}
-    %
-    \subpoint{Relevant examples: akkadian, backlog, walk, wall, balm, hammock}\\
-    
-    \medskip
-    If the matrix has only a few 1-cells, you're better off using a simple list.
+    \end{example}
 \end{frame}
 
-\begin{frame}{Which Impossible Words are Detected?}
+\begin{frame}{Which impossible words are detected?}
     \begin{itemize}
-        \item We have seen several times by now that bigrams are insufficient in certain applications. 
-        \item Instead, trigrams or maybe even 4-grams or 5-grams may be necessary.
-        \item Depending on how much accuracy we need, this is also the case here.
+        \item We have seen several times by now that\\
+              bigrams are insufficient in certain applications. 
+        \item We can increase the value of $n$ (e.g.~3, 4, 5).
     \end{itemize}
     %
     \begin{example}
@@ -305,7 +479,7 @@
     \end{example}
 \end{frame}
 
-\begin{frame}{Improving the $n$-Gram Model}
+\begin{frame}{Improving the $n$-gram model}
     \begin{enumerate}
         \item \textbf{Size}
             \begin{itemize}
@@ -331,14 +505,13 @@
     \end{enumerate}
 \end{frame}
 
-\begin{frame}{What Kind of Spell Checker is This Good For?}
-    
-\end{frame}
-
-\begin{frame}{Finding the Correct Word}
+\begin{frame}{Finding the correct word}
     \begin{itemize}
-        \item We now have a way of dealing with unknown words.
-        \item \textbf{But:} still need mechanism for spelling suggestions.
+        \item We have word $n$-grams for\\
+              finding some instances of real-word errors.
+        \item We have word lists and character $n$-grams for\\
+              finding non-word errors.
+        \item \textbf{But:} still need mechanism for \highlight{spelling suggestions}.
         \item \textbf{Three Common Approaches}
             \begin{itemize}
                 \item rule-based
@@ -348,9 +521,9 @@
     \end{itemize}
 \end{frame}
 
-\begin{frame}{Option 1: Ruled-Based Approach}
+\begin{frame}{Option 1: Ruled-based approach}
     \begin{itemize}
-        \item custom rules that provide candidate lists for specific misspellings
+        \item custom rules provide candidate lists for specific misspellings
     \end{itemize}
     %
     \begin{example}
@@ -375,7 +548,7 @@
     \end{center}
 \end{frame}
 
-\begin{frame}{Option 2: Similarity Keys}
+\begin{frame}{Option 2: Similarity keys}
     \begin{itemize}
         \item classify strings of characters according to similarity
         \item words in same similarity class are offered as suggestions
@@ -384,13 +557,10 @@
     \begin{exampleblock}{Example: US Census Soundex Algorithm}
         \begin{columns}
             \column{.75\linewidth}
-
-            \quad designed for indexing names by sound
-
             \begin{enumerate}
-                \item Retain first letter.
+                \item Always retain first letter.
                 \item Drop all (other) occurrences of \emph{a}, \emph{e}, \emph{i}, \emph{o}, \emph{u}, \emph{y}, \emph{h}, \emph{w}.
-                \item Replace consonsants by digits:
+                \item Replace all (other) consonsants by digits:
                     \begin{itemize}
                         \item \emph{b}, \emph{f}, \emph{p}, \emph{v} $\Rightarrow$ 1
                         \item \emph{c}, \emph{g}, \emph{j}, \emph{k}, \emph{s}, \emph{x}, \emph{z} $\Rightarrow$ 2
@@ -403,7 +573,7 @@
                 \item Shorten\slash lengthen to 4 characters.
             \end{enumerate}
 
-            \column{.25\linewidth}
+            \column{.35\linewidth}
             \begin{tabular}{rl}
                 \colored{purple}{bearded} &
                 \footnotesize $\underrightarrow{1+2}$ \\
@@ -427,7 +597,7 @@
     \end{exampleblock}
 \end{frame}
 
-\begin{frame}{(Dis)Advantages of Similarity Keys}
+\begin{frame}{(Dis)Advantages of similarity keys}
     \textbf{Advantages}
     \begin{itemize}
         \item easy to implement
@@ -442,11 +612,12 @@
     \end{itemize}
 \end{frame}
 
-\begin{frame}{Option 3: Minimum Edit Distance}
+\begin{frame}{Option 3: Minimum edit distance}
     How many steps does it take to transform one word into another?
     %
     \begin{block}{Levenshtein Distance}
-        The Levenshtein Distance between \colored{purple}{x} and \colored{teal}{y} is \colored{orange}{n} if the shortest sequence of
+        The Levenshtein Distance between \colored{purple}{x} and \colored{teal}{y} is \colored{orange}{n}\\
+        if the shortest sequence of
         %
         \begin{itemize}
             \item single character deletions, and\slash or
@@ -469,9 +640,10 @@
     \end{exampleblock}
 \end{frame}
 
-\begin{frame}{Computing Levenshtein Distances}
+\begin{frame}{Computing Levenshtein distances}
     \begin{itemize}
-        \item The Levensthein distance is determined by the \highlight{shortest sequence} of operations.
+        \item The Levensthein distance is determined by\\
+              the \highlight{shortest sequence} of operations.
         \item How do we know that there isn't a shorter solution?
     \end{itemize}    
 
@@ -486,11 +658,12 @@
     \end{block}
 \end{frame}
 
-\begin{frame}{Evalutating the Naive Solution}
+\begin{frame}{Evalutating the naive solution}
     \begin{itemize}
-        \item The naive solution is guaranteed to terminate (= it won't run forever).
+        \item The naive solution is guaranteed to terminate\\
+              (= it won't run forever).
         \item \textbf{Reason:} The Levenshtein distance between two words is\\
-            at most the length of the longer one.
+            at most the length of the longer word.
         \item \textbf{But:} The \highlight{combinatorial explosion} is enormous.
     \end{itemize}
     %
@@ -507,7 +680,7 @@
     \end{example}
 \end{frame}
 
-\begin{frame}{Improving Efficiency}
+\begin{frame}{Improving efficiency}
     \begin{itemize}
         \item \textbf{Problem 1:} ``generate and test'' is too undirected
         \item \textbf{Problem 2:} $n$-step calculation repeats computations from $(n-1)$-step calculation
@@ -524,20 +697,22 @@
     \end{block}
 \end{frame}
 
-\begin{frame}{Dynamic Programming for Levenshtein Distance}
+\begin{frame}{Dynamic programming for Levenshtein distance}
     \begin{itemize}
-        \item Draw a graph that represents the possible edit sequences from \colored{purple}{x} to \colored{teal}{y}.
+        \item Draw a graph that represents the possible edit sequences\\
+              from \colored{purple}{x} to \colored{teal}{y}.
         \item We want the least costly path through that graph.
         \item Dynamic programming solution:
             \begin{enumerate}
-                \item For each node, what is the least costly path to it from adjacent nodes?
+                \item For each node,\\
+                      what is the least costly path to it from adjacent nodes?
                 \item Throw away all other paths.
                 \item Go backwards from target to source to find correct path.
             \end{enumerate}
     \end{itemize}
 \end{frame}
 
-\begin{frame}{Example of Dynamic Programming}
+\begin{frame}{Example of dynamic programming}
     \begin{center}
         \begin{tikzpicture}
             \foreach \x in {0,...,4}
@@ -665,10 +840,11 @@
     \end{center}
 \end{frame}
 
-\begin{frame}{Evaluation of Levenstein Distance}
+\begin{frame}{Evaluation of Levenstein distance}
     \begin{itemize}
         \item fully automatic
-        \item more easily applied across languages
+        \item more easily applied across languages\\
+              (given a character-based orthography)
         \item computationally demanding, but
             \begin{itemize}
                 \item dynamic programming tames the beast
@@ -689,30 +865,17 @@
     \end{block}
 \end{frame}
 
-\begin{frame}{Adding Probabilities$\ldots$ Again}
+\begin{frame}{Adding probabilities$\ldots$ again}
     \begin{itemize}
         \item Once again probabilities improve accuracy.
-            %
-            \begin{block}{Overview of Probability Types}
-                \centering
-                \begin{tabular}{ll}
-                    \textbf{Probability Type} & \textbf{Application}\\
-                    corpus frequency & word suggestion in typing\\
-                    transition probability & improved word suggestion in typing\\
-                    sentence probability & OCR\\
-                    word probability & non-word detection\\
-                    confusion probability & spelling suggestions\\
-                \end{tabular}
-            \end{block}
-            %
-        \item \textbf{Confusion probabilities} measure how likely one word is\\
-            to be typed as realization of another.
+        \item \textbf{Confusion probabilities} measure how likely\\
+            one word is to be typed as realization of another.
         \item Difficult to compute, affected by many parameters\\
             \subpoint{keyboard layout, pronunciation, optical similarity, context, \ldots}
     \end{itemize}
 \end{frame}
 
-\begin{frame}{Putting it All Together}
+\begin{frame}{Putting it all together}
     \textbf{Step 1: Detecting Spelling Errors}\\
             \begin{itemize}
                 \item \emph{Non-Word Errors}\\
